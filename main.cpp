@@ -7,7 +7,7 @@ using namespace std;
 class Display {
 public:
     void showBoard(vector<char> s) {
-        cout << "    1   2   3   4   5   6\n"
+        cout << "\n    1   2   3   4   5   6\n"
              << "  1-----------------------2\n"
              << "A | " << s[0] << "   " << s[1] << "   " << s[2] << " | "
              << s[3] << "   " << s[4] << "   " << s[5] << " | A\n"
@@ -37,10 +37,38 @@ public:
 
 class Quadrant {
 public:
-    vector<char> s = {'.', '.', '.', '.', '.', '.', '.', '.', '.'};
+    vector<char> s = {'f', '.', '.',
+                      '.', '.', '.',
+                      '.', '.', '.'};
 
     void rotate(char dir) {
-        cout << "Rotating: " << this << ", to: " << dir << endl;
+        cout << "Rotating: " << ", to: " << dir << endl;
+        char temp;
+        int *mSet;
+        int leftSet[2][4] = {{0,2,8,6}, {1,5,7,3}};
+
+        for (int i = 0; i < 2; i++) {
+            *mSet = (*leftSet)[i];
+            temp = s[mSet->front()];
+            for (int j = 0; j < 2; j++){
+                s[mSet[j]] = s[mSet[j + 1]];
+            }
+            s[mSet.back()] = temp;
+        }
+
+        /*
+        temp = s[0];
+        s[0] = s[2];
+        s[2] = s[8];
+        s[8] = s[6];
+        s[6] = temp;
+
+        temp = s[1];
+        s[1] = s[5];
+        s[5] = s[7];
+        s[7] = s[3];
+        s[3] = temp;
+        */
     }
 };
 
@@ -54,22 +82,7 @@ class Board {
 public:
 
     void rotate(int qNum, char dir) {
-        qVec[--qNum].rotate(dir);
-
-        switch (qNum){
-            case 1:
-                q1.rotate(dir);
-                break;
-            case 2:
-                q2.rotate(dir);
-                break;
-            case 3:
-                q3.rotate(dir);
-                break;
-            case 4:
-                q4.rotate(dir);
-                break;
-        }
+        qVec[qNum - '1'].rotate( dir);
     }
 
     vector<char> getArray() {
@@ -92,17 +105,26 @@ public:
         map<char, vector<int>> m = { {'A', {0,1,2}}, {'B', {3,4,5}}, {'C', {6,7,8}},
                                      {'D', {0,1,2}}, {'E', {4,5,6}}, {'F', {7,8,9}}};
 
-        input = "C21R";
+        //input = "C21R";
         char row = input.at(0);
         char col = input.at(1);
         int indexToReplace = m[input.at(0)][input.at(1)-'1'];
         //cout << indexToReplace << endl;
+        int test = row - 'z';
         if (row <= 'C') {
             if (col <= '3') {
                 qVec[0].s.at(indexToReplace) = token;
+            } else {
+                qVec[1].s.at(indexToReplace) = token;
             }
         }
         qVec;
+    }
+
+    bool isSpotAvailable(string input) {
+        int rows = input.at(0) - 'A';
+        int inx = (rows * 6) + input.at(1)-'1';
+        return (getArray()[inx] == '.');
     }
 };
 
@@ -122,7 +144,7 @@ public:
     }
 
     void promptUser() {
-        if (turnNum>5) {isRunning = false;}
+        if (turnNum>2) {isRunning = false;}
         display.turnPrompt(gamePieces.at(turnNum % 2), turnNum);
         turnNum++;
     }
@@ -131,10 +153,10 @@ public:
         char temp;
         userInput.erase(userInput.begin(), userInput.end());
 
-        while(userInput.size() < 4){
+        while(userInput.size() < 4){                                          // HARD CODED CYCLE NUMBER
             //cin >> temp;
             temp = '\n';
-            userInput = "c31r";
+            userInput = "c31r";                                               // HARD CODED TEST STRING
             if (isalnum(temp) || isalpha(temp)) {
                 userInput.push_back(temp);
             }
@@ -143,13 +165,14 @@ public:
 
     void processInput() {
         board.placeToken(userInput, gamePieces.at(turnNum % 2));
+        board.rotate(userInput.at(2),userInput.at(3));
 
     }
 
     bool isInputValid() {
         userInput[0] = toupper(userInput[0]);
         userInput[3] = toupper(userInput[3]);
-        return true;
+        return board.isSpotAvailable(userInput);
     }
 
 
@@ -165,8 +188,10 @@ int main() {
         game.displayBoard();
         game.promptUser();
         game.getUserInput();
-        game.isInputValid();
-        game.processInput();
+        if (game.isInputValid()) {
+            game.processInput();
+        }
+
 
 
 
