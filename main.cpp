@@ -36,14 +36,20 @@ public:
 };
 
 class Quadrant {
-public:
-    vector<char> s = {'f', 'm', '.',
+    vector<char> s = {'.', '.', '.',
                       '.', '.', '.',
                       '.', '.', '.'};
+public:
+    char getElement(int i) {
+        return s.at(i);
+    }
+
+    void setElement(int i, char c) {
+        s.at(i) = c;
+    }
 
     void rotate(char dir) {
-        cout << "Rotating: " << ", to: " << dir << endl;
-        int RIGHSET[2][4] = {{0,6,8,2}, {1,3,7,5}};
+        int RIGHSET[2][4] = {{0,6,8,2}, {1,3,7,5}}; //FIXME: I AM BROKEN
         int LEFTSET[2][4] = {{0,2,8,6}, {1,5,7,3}};
         char temp;
         int *cSet;
@@ -92,7 +98,7 @@ public:
             for (int r = 0; r < 7; r += 3) {
                 for (int s = 0; s < 2; s++) {
                     for (int i = 0; i < 3; i++) {
-                        temp.push_back(qVec[j + s].s[r + i]);
+                        temp.push_back(qVec[j + s].getElement(r + i));
                     }
                 }
             }
@@ -102,23 +108,33 @@ public:
     }
 
     void placeToken(string input, char token) {
-        map<char, vector<int>> m = { {'A', {0,1,2}}, {'B', {3,4,5}}, {'C', {6,7,8}},
-                                     {'D', {0,1,2}}, {'E', {4,5,6}}, {'F', {7,8,9}}};
+        map<char, vector<int>> m = { {'A', {0,1,2}}, {'B', {3,4,5}},
+                                     {'C', {6,7,8}}, {'D', {0,1,2}},
+                                     {'E', {3,4,5}}, {'F', {6,7,8}}};
 
-        //input = "C21R";
+        //input = "A53R";
+
         char row = input.at(0);
         char col = input.at(1);
-        int indexToReplace = m[input.at(0)][input.at(1)-'1'];
-        //cout << indexToReplace << endl;
-        int test = row - 'z';
+        int indexToReplace = m[row][(col - '1') % 3];
+        //cout << "checkpoint " << indexToReplace << endl;
+
+
         if (row <= 'C') {
             if (col <= '3') {
-                qVec[0].s.at(indexToReplace) = token;
+                qVec[0].setElement(indexToReplace, token);
             } else {
-                qVec[1].s.at(indexToReplace) = token;
+                qVec[1].setElement(indexToReplace, token);
             }
+        } else if (row > 'C') {
+            if (col <= '3') {
+                qVec[2].setElement(indexToReplace, token);
+            } else {
+                qVec[3].setElement(indexToReplace, token);
+            }
+        } else {
+            cout << "Error: placeToken not catching character: " << row << endl;
         }
-        qVec;
     }
 
     bool isSpotAvailable(string input) {
@@ -133,7 +149,7 @@ class Game {
     Display display;
     string userInput;
     Board board;
-    vector<char> gamePieces = {'O', 'X'};
+    vector<char> gamePieces = {'X','O'};
 
 
 public:
@@ -144,7 +160,7 @@ public:
     }
 
     void promptUser() {
-        if (turnNum>3) {isRunning = false;}                                     // HARD CODED CYCLE NUMBER
+
         display.turnPrompt(gamePieces.at(turnNum % 2), turnNum);
         turnNum++;
     }
@@ -153,10 +169,14 @@ public:
         char temp;
         userInput.erase(userInput.begin(), userInput.end());
 
+        string inputs[14] = {"C31R","A53R","c21r","b64l","c53l","d63r","c41r","e14l","c62r","f23l"};
+        userInput = inputs[turnNum - 2];
+        cout << userInput << endl;
+
         while(userInput.size() < 4){
             //cin >> temp;
             temp = '\n';
-            userInput = "c31r";                                               // HARD CODED TEST STRING
+            //userInput = "A53R";                                               // HARD CODED TEST STRING
             if (isalnum(temp) || isalpha(temp)) {
                 userInput.push_back(temp);
             }
@@ -175,8 +195,9 @@ public:
         return board.isSpotAvailable(userInput);
     }
 
-
-
+    void checkWin() {
+        if (turnNum>10) {isRunning = false;}                                     // HARD CODED CYCLE NUMBER
+    }
 };
 
 
@@ -191,51 +212,10 @@ int main() {
         if (game.isInputValid()) {
             game.processInput();
         }
-
-
-
-
-
-        //validate user input
-        // if valid, place on board, else prompt again
-
-        //check for winning
-       // game.isRunning = false;
+        game.checkWin();
     }
 
     return 0;
 }
 
 
-
-
-/*
-    for (int i = 0; i < 7; i += 3) {
-        temp.push_back(q1.s[i]);
-        temp.push_back(q1.s[i+1]);
-        temp.push_back(q1.s[i+2]);
-        temp.push_back(q2.s[i]);
-        temp.push_back(q2.s[i+1]);
-        temp.push_back(q2.s[i+2]);
-    }
-    for (int i = 0; i < 7; i += 3) {
-        temp.push_back(q3.s[i]);
-        temp.push_back(q3.s[i+1]);
-        temp.push_back(q3.s[i+2]);
-        temp.push_back(q4.s[i]);
-        temp.push_back(q4.s[i+1]);
-        temp.push_back(q4.s[i+2]);
-    }
-    */
-
-
-/*
-        for (int r = 0; r < 7; r += 3) {
-            for (int i = 0; i < 3; i++) {
-                temp.push_back(q3.s[r + i]);
-            }
-            for (int i = 0; i < 3; i++) {
-                temp.push_back(q4.s[r + i]);
-            }
-        }
-         */
