@@ -37,38 +37,38 @@ public:
 
 class Quadrant {
 public:
-    vector<char> s = {'f', '.', '.',
+    vector<char> s = {'f', 'm', '.',
                       '.', '.', '.',
                       '.', '.', '.'};
 
     void rotate(char dir) {
         cout << "Rotating: " << ", to: " << dir << endl;
+        int RIGHSET[2][4] = {{0,6,8,2}, {1,3,7,5}};
+        int LEFTSET[2][4] = {{0,2,8,6}, {1,5,7,3}};
         char temp;
-        int *mSet;
-        int leftSet[2][4] = {{0,2,8,6}, {1,5,7,3}};
+        int *cSet;
+        int *kSet;
 
-        for (int i = 0; i < 2; i++) {
-            *mSet = (*leftSet)[i];
-            temp = s[mSet->front()];
-            for (int j = 0; j < 2; j++){
-                s[mSet[j]] = s[mSet[j + 1]];
-            }
-            s[mSet.back()] = temp;
+        //map<char, int*> mMap = {{'R', RIGHSET}, {'L', LEFTSET}};
+        //kSet = nMap[dir];
+
+        if (dir == 'R') {
+            kSet = *RIGHSET;
+        } else if (dir == 'L') {
+            kSet = *LEFTSET;
+        } else {
+            cout << "unable to find left or right set" << endl;
         }
 
-        /*
-        temp = s[0];
-        s[0] = s[2];
-        s[2] = s[8];
-        s[8] = s[6];
-        s[6] = temp;
+        for (int i = 0; i < 5; i += 4) {
+            cSet = &(kSet[i]);
+            temp = s[cSet[0]];
+            for (int j = 0; j < 3; j++) {
+                s[cSet[j]] = s[cSet[j + 1]];
+            }
+            s[cSet[3]] = temp;
+        }
 
-        temp = s[1];
-        s[1] = s[5];
-        s[5] = s[7];
-        s[7] = s[3];
-        s[3] = temp;
-        */
     }
 };
 
@@ -144,7 +144,7 @@ public:
     }
 
     void promptUser() {
-        if (turnNum>2) {isRunning = false;}
+        if (turnNum>3) {isRunning = false;}                                     // HARD CODED CYCLE NUMBER
         display.turnPrompt(gamePieces.at(turnNum % 2), turnNum);
         turnNum++;
     }
@@ -153,7 +153,7 @@ public:
         char temp;
         userInput.erase(userInput.begin(), userInput.end());
 
-        while(userInput.size() < 4){                                          // HARD CODED CYCLE NUMBER
+        while(userInput.size() < 4){
             //cin >> temp;
             temp = '\n';
             userInput = "c31r";                                               // HARD CODED TEST STRING
