@@ -108,39 +108,28 @@ public:
     }
 
     void placeToken(string input, char token) {
-        map<char, vector<int>> m = { {'A', {0,1,2}}, {'B', {3,4,5}},
-                                     {'C', {6,7,8}}, {'D', {0,1,2}},
-                                     {'E', {3,4,5}}, {'F', {6,7,8}}};
-
-        //input = "A53R";
+        map<char, vector<int>> m = { {'A', {0,1,2}}, {'B', {3,4,5}}, {'C', {6,7,8}},
+                                     {'D', {0,1,2}}, {'E', {3,4,5}}, {'F', {6,7,8}}};
 
         char row = input.at(0);
         char col = input.at(1);
         int indexToReplace = m[row][(col - '1') % 3];
-        //cout << "checkpoint " << indexToReplace << endl;
+        int rMulti = (row - 'A') * 6;
 
-
-        if (row <= 'C') {
-            if (col <= '3') {
-                qVec[0].setElement(indexToReplace, token);
-            } else {
-                qVec[1].setElement(indexToReplace, token);
-            }
-        } else if (row > 'C') {
-            if (col <= '3') {
-                qVec[2].setElement(indexToReplace, token);
-            } else {
-                qVec[3].setElement(indexToReplace, token);
-            }
-        } else {
-            cout << "Error: placeToken not catching character: " << row << endl;
-        }
+        int index = (((rMulti + (col-'1')) / 3) % 2) + (((rMulti + (col-'1'))/18)*2);
+        qVec[index].setElement(indexToReplace, token);
     }
 
     bool isSpotAvailable(string input) {
         int rows = input.at(0) - 'A';
         int inx = (rows * 6) + input.at(1)-'1';
         return (getArray()[inx] == '.');
+    }
+
+
+
+    bool hasWin() {
+        getArray();
     }
 };
 
@@ -196,7 +185,8 @@ public:
     }
 
     void checkWin() {
-        if (turnNum>10) {isRunning = false;}                                     // HARD CODED CYCLE NUMBER
+        board.hasWin();
+        if (turnNum>11) {isRunning = false;}                                     // HARD CODED CYCLE NUMBER
     }
 };
 
@@ -219,3 +209,21 @@ int main() {
 }
 
 
+
+/*
+if (row <= 'C') {
+    if (col <= '3') {
+        qVec[0].setElement(indexToReplace, token);
+    } else {
+        qVec[1].setElement(indexToReplace, token);
+    }
+} else if (row > 'C') {
+    if (col <= '3') {
+        qVec[2].setElement(indexToReplace, token);
+    } else {
+        qVec[3].setElement(indexToReplace, token);
+    }
+} else {
+    cout << "Error: placeToken not catching character: " << row << endl;
+}
+*/
