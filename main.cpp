@@ -33,6 +33,9 @@ public:
         cout << turnNum << ". Enter row, column, quadrant, direction for " << userPiece << ": ";
     }
 
+    void exitMessage() {
+        cout << "Thanks for playing.  Exiting..." << endl;
+    }
 };
 
 class Quadrant {
@@ -116,8 +119,8 @@ public:
         int indexToReplace = m[row][(col - '1') % 3];
         int rMulti = (row - 'A') * 6;
 
-        int index = (((rMulti + (col-'1')) / 3) % 2) + (((rMulti + (col-'1'))/18)*2);
-        qVec[index].setElement(indexToReplace, token);
+        int quadNum = (((rMulti + (col-'1')) / 3) % 2) + (((rMulti + (col-'1'))/18)*2);
+        qVec[quadNum].setElement(indexToReplace, token);
     }
 
     bool isSpotAvailable(string input) {
@@ -126,20 +129,55 @@ public:
         return (getArray()[inx] == '.');
     }
 
+    vector<char> cVec;
+    bool hasWon= false;
 
+    void checkDiagR(char c, int i, int t) {
+        if (t == 0 ) {
+            hasWon = true;
+        } else if (cVec[i] == c) {
+            checkDiagL(c, i+7, --t);
+        }
 
-    bool hasWin() {
-        getArray();
+    }
+    void checkDiagL(char c, int i, int t) {
+        if (t == 0 ) {
+            hasWon = true;
+        } else if (cVec[i] == c) {
+            checkDiagL(c,i+5, --t);
+        }
+    }
+    void checkRow(int i, int t) {
+
+    }
+    void checkCol(int i, int t) {
+
+    }
+
+    bool hasWin(char c) {
+        cVec = getArray();
+        int i = 0;
+        int depth = 5;
+
+        while (!hasWon && i < 36) {
+            if (i == 4 || i == 5 || i == 10 || i == 11) { // also has to be in { 4, 5,10,11}
+                checkDiagL(c, i, depth);
+            }
+            if (i == 0 || i == 1 || i == 6 || i == 7) { // also has to be in { 0, 1, 6, 7}
+                checkDiagR(c, i, depth);
+            }
+            i++;
+        }
+        return hasWon;
     }
 };
 
 class Game {
-    int turnNum = 1;
+    int turnNum = 0;
     Display display;
     string userInput;
     Board board;
-    vector<char> gamePieces = {'X','O'};
-
+    vector<char> gamePieces = {'O','X'};
 
 public:
     bool isRunning = true;
@@ -149,17 +187,21 @@ public:
     }
 
     void promptUser() {
-
+        ++turnNum;
         display.turnPrompt(gamePieces.at(turnNum % 2), turnNum);
-        turnNum++;
     }
 
+    void exitMessage() {
+        display.exitMessage();
+    }
+
+    int rotation = 0;
     void getUserInput() {
         char temp;
         userInput.erase(userInput.begin(), userInput.end());
 
-        string inputs[14] = {"C31R","A53R","c21r","b64l","c53l","d63r","c41r","e14l","c62r","f23l"};
-        userInput = inputs[turnNum - 2];
+        string inputs[14] = {"C31R","A53R","c21r","b64l","c53l","d63r","c41r","e14l","c62r","f23l","c31l"};
+        userInput = inputs[rotation++];
         cout << userInput << endl;
 
         while(userInput.size() < 4){
@@ -185,8 +227,11 @@ public:
     }
 
     void checkWin() {
-        board.hasWin();
-        if (turnNum>11) {isRunning = false;}                                     // HARD CODED CYCLE NUMBER
+        if (board.hasWin('O')) {
+            cout << "*** "<< gamePieces.at(turnNum % 2) << " has won the game!" << endl;
+            isRunning = false;
+        }
+        if (turnNum>9) {isRunning = false;}                                     // HARD CODED CYCLE NUMBER
     }
 };
 
@@ -204,26 +249,11 @@ int main() {
         }
         game.checkWin();
     }
-
+    game.displayBoard();
+    game.exitMessage();
     return 0;
 }
 
 
 
-/*
-if (row <= 'C') {
-    if (col <= '3') {
-        qVec[0].setElement(indexToReplace, token);
-    } else {
-        qVec[1].setElement(indexToReplace, token);
-    }
-} else if (row > 'C') {
-    if (col <= '3') {
-        qVec[2].setElement(indexToReplace, token);
-    } else {
-        qVec[3].setElement(indexToReplace, token);
-    }
-} else {
-    cout << "Error: placeToken not catching character: " << row << endl;
-}
-*/
+
