@@ -1,3 +1,14 @@
+/*----------------------------------------------------------
+ * Program 5: Pentago
+ *
+ * Class: CS 141, Spring 2020. Tue 4pm lab
+ * System: CLion on Windows 10
+ * Author: Shawn Klein
+ *
+ * ---------------------------------------------------------
+ */
+
+
 #include <iostream>
 #include <vector>
 #include <map>
@@ -6,6 +17,35 @@ using namespace std;
 
 class Display {
 public:
+    void displayInstructions() {
+        cout << "\n"
+             << "Play the two-player game of Pentago. Be the first to get 5 in a row. \n"
+             << "                                                                 \n"
+             << "Pentago is played on a 6 by 6 board, divided into four 3 by 3    \n"
+             << "quadrants.  There are two players, X and O, who alternate turns. \n"
+             << "The goal of each player is to get five of their pieces in a row, \n"
+             << "either horizontally, vertically, or diagonally.                  \n"
+             << "                                                                 \n"
+             << "Players take turns placing one of their pieces into an empty     \n"
+             << "space anywhere on the board, then choosing one of the four       \n"
+             << "board quadrants to rotate 90 degrees left or right.              \n"
+             << "                                                                 \n"
+             << "If both players get five in a row at the same time, or the       \n"
+             << "last move is played with no five in a row, the game is a tie.    \n"
+             << "If a player makes five a row by placing a piece, there is no need\n"
+             << "to rotate a quadrant and the player wins immediately.            \n"
+             << "                                                                 \n"
+             << "     Play online at:  https://perfect-pentago.net                \n"
+             << "     Purchase at:     www.mindtwisterusa.com                     \n"
+             << "                                                                 \n"
+             << "For each move provide four inputs:                               \n"
+             << "   row (A-F), column (1-6), quadrant (1-4), rotation direction (L or R) \n"
+             << "For instance input of B32R places the next piece at B3 and then  \n"
+             << "would rotate quadrant 2 (upper-right) to the right (clockwise).  \n"
+             << "                                                                 \n"
+             << "At any point enter 'x' to exit the program or 'i' to display instructions." << endl;
+    }
+
     void showBoard(vector<char> s) {
         cout << "\n    1   2   3   4   5   6\n"
              << "  1-----------------------2\n"
@@ -52,8 +92,8 @@ public:
     }
 
     void rotate(char dir) {
-        int RIGHSET[2][4] = {{0,6,8,2}, {1,3,7,5}}; //FIXME: I AM BROKEN
-        int LEFTSET[2][4] = {{0,2,8,6}, {1,5,7,3}};
+        int rRotateIdxs[2][4] = {{0,6,8,2}, {1,3,7,5}}; //FIXME: I AM BROKEN
+        int lRotateIdxs[2][4] = {{0,2,8,6}, {1,5,7,3}};
         char temp;
         int *cSet;
         int *kSet;
@@ -62,9 +102,9 @@ public:
         //kSet = nMap[dir];
 
         if (dir == 'R') {
-            kSet = *RIGHSET;
+            kSet = *rRotateIdxs;
         } else if (dir == 'L') {
-            kSet = *LEFTSET;
+            kSet = *lRotateIdxs;
         } else {
             cout << "unable to find left or right set" << endl;
         }
@@ -77,15 +117,11 @@ public:
             }
             s[cSet[3]] = temp;
         }
-
     }
 };
 
 class Board {
-    Quadrant q1;
-    Quadrant q2;
-    Quadrant q3;
-    Quadrant q4;
+    Quadrant q1, q2, q3, q4;
     vector<Quadrant> qVec = {q1,q2,q3,q4};
 
 public:
@@ -95,19 +131,19 @@ public:
     }
 
     vector<char> getArray() {
-        vector<char> temp;
+        vector<char> collectingVec;
 
         for (int j = 0; j < 3; j += 2) {
             for (int r = 0; r < 7; r += 3) {
                 for (int s = 0; s < 2; s++) {
                     for (int i = 0; i < 3; i++) {
-                        temp.push_back(qVec[j + s].getElement(r + i));
+                        collectingVec.push_back(qVec[j + s].getElement(r + i));
                     }
                 }
             }
         }
 
-        return temp;
+        return collectingVec;
     }
 
     void placeToken(string input, char token) {
@@ -132,42 +168,28 @@ public:
     vector<char> cVec;
     bool hasWon= false;
 
-    void checkDiagR(char c, int i, int t) {
-        if (t == 0 ) {
+    void checkSequence(char token, int indx, int seq, int nextEle) {
+        if (seq == 0 ) {
             hasWon = true;
-        } else if (cVec[i] == c) {
-            checkDiagL(c, i+7, --t);
+        } else if (cVec[indx] == token) {
+            checkSequence(token, indx + nextEle, --seq, nextEle);
         }
-
-    }
-    void checkDiagL(char c, int i, int t) {
-        if (t == 0 ) {
-            hasWon = true;
-        } else if (cVec[i] == c) {
-            checkDiagL(c,i+5, --t);
-        }
-    }
-    void checkRow(int i, int t) {
-
-    }
-    void checkCol(int i, int t) {
-
     }
 
     bool hasWin(char c) {
         cVec = getArray();
-        int i = 0;
         int depth = 5;
+        map<int, vector<int>> m = { {5, {4,5,10,11}}, {7,{0,1,6,7}},
+                                    {1, {0,1,6,7,12,13,18,19,24,25,30,31}},
+                                    {6, { 0, 1,2,3,4,5,6,7,8,9,10,11,12}}};
 
-        while (!hasWon && i < 36) {
-            if (i == 4 || i == 5 || i == 10 || i == 11) { // also has to be in { 4, 5,10,11}
-                checkDiagL(c, i, depth);
+        map<int, vector<int>>::iterator it;
+        for (it = m.begin(); it != m.end(); it++) {
+            for (size_t j = 0; j < it->second.size(); j++) {
+                checkSequence(c, it->second[j], depth, it->first);
             }
-            if (i == 0 || i == 1 || i == 6 || i == 7) { // also has to be in { 0, 1, 6, 7}
-                checkDiagR(c, i, depth);
-            }
-            i++;
         }
+
         return hasWon;
     }
 };
@@ -181,6 +203,10 @@ class Game {
 
 public:
     bool isRunning = true;
+
+    void showInstructions() {
+        display.displayInstructions();
+    }
 
     void displayBoard(){
         display.showBoard(board.getArray());
@@ -206,8 +232,6 @@ public:
 
         while(userInput.size() < 4){
             //cin >> temp;
-            temp = '\n';
-            //userInput = "A53R";                                               // HARD CODED TEST STRING
             if (isalnum(temp) || isalpha(temp)) {
                 userInput.push_back(temp);
             }
@@ -239,6 +263,7 @@ public:
 int main() {
     Game game;
     string userInput;
+    game.showInstructions();
 
     while (game.isRunning) {
         game.displayBoard();
@@ -257,3 +282,53 @@ int main() {
 
 
 
+/*
+  void checkDiagR(char c, int i, int t) {
+      if (t == 0 ) {
+          hasWon = true;
+      } else if (cVec[i] == c) {
+          checkDiagL(c, i+7, --t);
+      }
+
+  }
+  void checkDiagL(char c, int i, int t) {
+      if (t == 0 ) {
+          hasWon = true;
+      } else if (cVec[i] == c) {
+          checkDiagL(c,i+5, --t);
+      }
+  }
+  void checkRow(char c,int i, int t) {
+      if (t == 0 ) {
+          hasWon = true;
+      } else if (cVec[i] == c) {
+          checkDiagL(c, i+1, --t);
+      }
+  }
+  void checkCol(char c,int i, int t) {
+      if (t == 0 ) {
+          hasWon = true;
+      } else if (cVec[i] == c) {
+          checkDiagL(c, i+6, --t);
+      }
+  }
+  */
+
+
+/*
+while (!hasWon && i < 36) {
+    if (i == 4 || i == 5 || i == 10 || i == 11) { // +5 for { 4, 5,10,11}
+        checkSequence(c, i, depth, 5);
+    }
+    if (i == 0 || i == 1 || i == 6 || i == 7) { //  +7 for { 0, 1, 6, 7}
+        checkSequence(c, i, depth, 7);
+    }
+    if (i == 0 || i == 1 || i == 6 || i == 7) { // +1 for {0,1,6,7,12,13,18,19,24,25,30,31}
+        checkSequence(c, i, depth, 1);
+    }
+    if (i == 0 || i == 1 || i == 2 || i == 3) { //  +6 for { 0, 1,2,3,4,5,6,7,8,9,10,11,12}
+        checkSequence(c, i, depth, 6);
+    }
+    i++;
+}
+*/
