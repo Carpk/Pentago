@@ -17,11 +17,11 @@ using namespace std;
 
 class Display {
 public:
-    void displayIntro() {
+    static void displayIntro() {
         cout << "Welcome to Pentago, where you try to get 5 of your pieces in a line.\n"
              << "At any point enter 'x' to exit or 'i' for instructions." << endl;
     }
-    void displayInstructions() {
+    static void displayInstructions() {
         cout << "\n"
              << "Play the two-player game of Pentago. Be the first to get 5 in a row. \n"
              << "                                                                 \n"
@@ -50,7 +50,7 @@ public:
              << "At any point enter 'x' to exit the program or 'i' to display instructions." << endl;
     }
 
-    void showBoard(vector<char> s) {
+    static void showBoard(vector<char> s) {
         cout << "\n    1   2   3   4   5   6\n  1-----------------------2\nA | "
              << s[0] << "   " << s[1] << "   " << s[2] << " | "
              << s[3] << "   " << s[4] << "   " << s[5]
@@ -72,13 +72,29 @@ public:
              << " | F\n  3-----------------------4\n    1   2   3   4   5   6" << endl;
     }
 
-    void turnPrompt(char userPiece, int turnNum) {
+    static void turnPrompt(char userPiece, int turnNum) {
         cout << turnNum << ". Enter row, column, quadrant, direction for " << userPiece << ": ";
     }
 
-    void exitMessage() {
-        cout << "Exiting program..." << endl;
-    }
+    static void exitMessage() {cout << "Exiting program..." << endl;}
+
+    static void invalidRow() {cout << "*** Invalid move row.  Please retry." << endl;}
+
+    static void invalidColumn() {cout << "*** Invalid move column.  Please retry." << endl;}
+
+    static void invalidQuadrant() {cout << "*** Selected quadrant is invalid.  Please retry." << endl;}
+
+    static void invalidRotation() {cout << "*** Quadrant rotation direction is invalid.  Please retry." << endl;}
+
+    static void spotNotAvailable() {cout << "*** That board location is already taken.  Please retry." << endl;}
+
+    static void bothPlayersWin() {cout << "*** Both X and O have won.  Game is a tie." << endl;}
+
+    static void singlePLayerWin(char token) {cout << "*** "<< token << " has won the game!" << endl;}
+
+    static void tieGamePrompt() {cout << "*** No one has won.  Game is a tie." << endl;}
+
+    static void completedExitPrompt() {cout << "Thanks for playing.  Exiting...";}
 };
 
 class Quadrant {
@@ -121,7 +137,7 @@ public:
                 s[cSet[j]] = s[cSet[j + 1]];
             }
             s[cSet[3]] = temp;
-        }
+        }//
     }
 };
 
@@ -170,19 +186,22 @@ public:
     }
 
     vector<char> cVec;
-    bool hasWon= false;
 
-    void checkSequence(char token, int indx, int seq, int nextEle) {
+
+    bool checkSequence(char token, int indx, int seq, int nextEle) {
         if (seq == 0 ) {
-            hasWon = true;
+            return true;
         } else if (cVec[indx] == token) {
-            checkSequence(token, indx + nextEle, --seq, nextEle);
+            return checkSequence(token, indx + nextEle, --seq, nextEle);
+        } else {
+            return false;
         }
     }
 
-    bool hasWin(char c) {
+    bool hasWin(char token) {
         cVec = getArray();
         int depth = 5;
+        bool isTokenWin = false;
         map<int, vector<int>> m = { {5, {4,5,10,11}}, {7,{0,1,6,7}},
                                     {1, {0,1,6,7,12,13,18,19,24,25,30,31}},
                                     {6, { 0, 1,2,3,4,5,6,7,8,9,10,11,12}}};
@@ -190,11 +209,12 @@ public:
         map<int, vector<int>>::iterator it;
         for (it = m.begin(); it != m.end(); it++) {
             for (size_t j = 0; j < it->second.size(); j++) {
-                checkSequence(c, it->second[j], depth, it->first);
+                isTokenWin = checkSequence(token, it->second[j], depth, it->first);
+                if (isTokenWin) {return isTokenWin;}
             }
         }
 
-        return hasWon;
+        return isTokenWin;
     }
 };
 
@@ -227,24 +247,30 @@ public:
         display.turnPrompt(gamePieces.at(turnNum % 2), turnNum);
     }
 
-    void exitMessage() {
-        display.exitMessage();
-    }
 
     int rotation = 0;
     void getUserInput() {
         char temp;
         userInput.erase(userInput.begin(), userInput.end());
 
-        //string inputs[14] = {"C31R","A53R","c21r","b64l","c53l","d63r","c41r","e14l","c62r","f23l","c31l"};
-        string inputs[14] = {"a24r\n","B34R\n","c 4 4 r x"};
+        string inputs[14] = {"C31R","A53R","c21r","b64l","c53l","d63r","c41r","e14l","c62r","f23l","c31l"};
+        //string inputs[14] = {"a24r\n","B34R\n","c 4 4 r x"};
+        //string inputs[14] = {"c31r", "A53R", "G05h", "c05h", "c25h", "c21h", "c11r", "c21r", "x"};
         userInput = inputs[rotation++];
         cout << userInput;
 
         while(userInput.size() < 4){
             //cin >> temp;
-            if (toupper(temp) == 'X') {activeGame = false; break;}
-            if (toupper(temp) == 'I') {display.displayInstructions(); break;}
+            if (toupper(temp) == 'X') {
+                display.exitMessage();
+                activeGame = false;
+                break;
+            }
+            if (toupper(temp) == 'I') {
+                userInput.erase(userInput.begin(), userInput.end());
+                display.displayInstructions();
+                break;
+            }
             if (isalnum(temp) || isalpha(temp)) {
                 userInput.push_back(temp);
             }
@@ -257,41 +283,56 @@ public:
     }
 
     bool isInputValid() {
-        bool correctSize = userInput.size() >= 4;
+        bool correctSize = (userInput.size() >= 4);
 
         if (correctSize) {
             userInput[0] = toupper(userInput[0]);
             userInput[3] = toupper(userInput[3]);
-            bool isValidRow = 'A' <= toupper(userInput[0]) && toupper(userInput[0]) <= 'F';
-            bool isValidCol = '1' <= userInput[1] && userInput[1] <= '6';
-            bool isValidQuad = '1' <= userInput[2] && userInput[2] <= '4';
-            bool isValidDir = ('L' == toupper(userInput[3])) || (toupper(userInput[3] == 'R'));
-            if (isValidRow && isValidCol && isValidQuad && isValidDir) {
-                return board.isSpotAvailable(userInput);
+            if (userInput[0] < 'A' || 'F' < userInput[0]) {
+                display.invalidRow();
+                return false;
+            } else if (userInput[1] < '1' || '6' < userInput[1]) {
+                display.invalidColumn();
+                return false;
+            } else if (userInput[2] < '1' || '4' < userInput[2]){
+                display.invalidQuadrant();
+                return false;
+            } else if (('L' != userInput[3]) && (userInput[3] != 'R')) {
+                display.invalidRotation();
+                return false;
+            } else if (!board.isSpotAvailable(userInput)) {
+                display.spotNotAvailable();
+                return false;
+            } else {
+                return true;
             }
-        } else {
-            return false;
         }
+
+        return false;
+    }
+
+    void completedGamePrompts() {
+        displayBoard();
+        display.completedExitPrompt();
+        activeGame = false;
     }
 
     void checkWin() {
         bool playerWin = board.hasWin(gamePieces.at(turnNum % 2));
-        bool opponentWin =board.hasWin(gamePieces.at((turnNum + 1)% 2));
+        bool opponentWin = board.hasWin(gamePieces.at((turnNum + 1)% 2));
+
         if (playerWin && opponentWin) {
-            cout << "*** Both X and O have won.  Game is a tie." << endl;
-            displayBoard();
-            activeGame = false;
+            display.bothPlayersWin();
+            completedGamePrompts();
         } else if (playerWin) {
-            cout << "*** "<< gamePieces.at(turnNum % 2) << " has won the game!" << endl;
-            displayBoard();
-            activeGame = false;
+            display.singlePLayerWin(gamePieces.at(turnNum % 2));
+            completedGamePrompts();
         } else if (opponentWin) {
-            cout << "*** "<< gamePieces.at((turnNum + 1) % 2) << " has won the game!" << endl;
-            displayBoard();
-            activeGame = false;
-        } else if (turnNum>36) {
-            cout << "*** No one has won.  Game is a tie." << endl;
-            activeGame = false;
+            display.singlePLayerWin(gamePieces.at((turnNum + 1) % 2));
+            completedGamePrompts();
+        } else if (turnNum > 35) {
+            display.tieGamePrompt();
+            completedGamePrompts();
         }
     }
 };
@@ -302,45 +343,20 @@ int main() {
     string userInput;
     game.printIntro();
 
-
     while (game.isRunning()) {
         game.displayBoard();
-
         game.promptUser();
         game.getUserInput();
-
         if (game.isInputValid()) {
             game.processInput();
             game.checkWin();
             game.incTurnNum();
         }
-
-
     }
 
-    game.exitMessage();
     return 0;
 }
 
 
 
 
-
-
-/*
-while (!hasWon && i < 36) {
-    if (i == 4 || i == 5 || i == 10 || i == 11) { // +5 for { 4, 5,10,11}
-        checkSequence(c, i, depth, 5);
-    }
-    if (i == 0 || i == 1 || i == 6 || i == 7) { //  +7 for { 0, 1, 6, 7}
-        checkSequence(c, i, depth, 7);
-    }
-    if (i == 0 || i == 1 || i == 6 || i == 7) { // +1 for {0,1,6,7,12,13,18,19,24,25,30,31}
-        checkSequence(c, i, depth, 1);
-    }
-    if (i == 0 || i == 1 || i == 2 || i == 3) { //  +6 for { 0, 1,2,3,4,5,6,7,8,9,10,11,12}
-        checkSequence(c, i, depth, 6);
-    }
-    i++;
-}
-*/
