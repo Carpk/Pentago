@@ -114,14 +114,14 @@ public:
         int rRotateIdxs[2][4] = {{0,6,8,2}, {1,3,7,5}}; //FIXME: I AM BROKEN
         int lRotateIdxs[2][4] = {{0,2,8,6}, {1,5,7,3}};
         char temp;
-        int *cSet;
-        int *kSet;
+        vector<int> cSet;
+        vector<vector<int>> kSet;
 
         vector<vector<int>> testSet;
         map<char, vector<vector<int>>> mMap = {{'R', {{0,6,8,2}, {1,3,7,5}}},
                                                {'L', {{0,2,8,6}, {1,5,7,3}}}};
-        testSet = mMap[dir];
-
+        kSet = (mMap[dir]);
+/*
         if (dir == 'R') {
             kSet = *rRotateIdxs;
         } else if (dir == 'L') {
@@ -129,9 +129,9 @@ public:
         } else {
             cout << "unable to find left or right set" << endl;
         }
-
+*/
         for (int i = 0; i < 5; i += 4) {
-            cSet = &(kSet[i]);
+            cSet = kSet[i];
             temp = s[cSet[0]];
             for (int j = 0; j < 3; j++) {
                 s[cSet[j]] = s[cSet[j + 1]];
@@ -232,11 +232,11 @@ public:
     }
 
     void printIntro() {
-        display.displayIntro();
+        Display::displayIntro();
     }
 
     void displayBoard(){
-        display.showBoard(board.getArray());
+        Display::showBoard(board.getArray());
     }
 
     void incTurnNum() {
